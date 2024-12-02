@@ -110,7 +110,7 @@ def main():
     if not checkScalability(data):
         x_train, x_test, y_train, y_test = scale_data(x_train, x_test, y_train, y_test)
 
-    print(x_train)
+    # print(x_train)
 
 
 
