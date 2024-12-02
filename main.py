@@ -69,8 +69,7 @@ def checkScalability(data):
     for col, std_value in data_std.items():
         if not (0.9 <= std_value <= 1.1):
             is_scalable = False
-            # break
-            print(f"Feature '{col}' is not scaled properly (std: {std_value:.2f}). Scaling needed.")
+            break
 
     if is_scalable:
         print("\nData is already standardized with std ≈ 1 for all features.")
