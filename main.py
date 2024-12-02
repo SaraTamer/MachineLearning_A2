@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
@@ -39,7 +38,7 @@ def encode_target(data):
     return target_encoded
 
 
-def scale_data(x_train, x_test, y_train, y_test, ):
+def scale_data(x_train, x_test, y_train, y_test):
     numeric_data_x_train = x_train.select_dtypes(include=['number'])
     numeric_data_x_test = x_test.select_dtypes(include=['number'])
 
@@ -70,6 +69,7 @@ def checkScalability(data):
     for col, std_value in data_std.items():
         if not (0.9 <= std_value <= 1.1):
             is_scalable = False
+            # break
             print(f"Feature '{col}' is not scaled properly (std: {std_value:.2f}). Scaling needed.")
 
     if is_scalable:
@@ -109,8 +109,13 @@ def main():
     x_train, x_test, y_train, y_test = split_data(data)
 
     if not checkScalability(data):
-        scale_data(x_train, x_test, y_train, y_test)
+        x_train, x_test, y_train, y_test = scale_data(x_train, x_test, y_train, y_test)
+
+    print(x_train)
+
 
 
 if __name__ == "__main__":
     main()
+
+
