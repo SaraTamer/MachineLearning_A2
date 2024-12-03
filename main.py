@@ -127,12 +127,48 @@ def knn_from_scratch(X_train, y_train, X_test, k):
 
     return y_predicted
 
-        
+def knn_comparison(x_train, y_train, x_test, y_test):
+    # Prepare data for the comparison table
+    comparison_data = {
+        "Model": [],
+        "Accuracy": [],
+        "Precision": [],
+        "Recall": []
+    }
 
+    # KNN from Scratch Evaluation for Different k Values
+    k_values = [1, 3, 5, 7, 9]
+    for k in k_values:
+        # KNN Using scikit-learn
+        knn_model = KNeighborsClassifier(n_neighbors=k)
+        knn_model.fit(x_train, y_train)
+        y_pred_knn = knn_model.predict(x_test)
 
+        # Evaluate scikit-learn kNN
+        accuracy_knn = accuracy_score(y_test, y_pred_knn)
+        precision_knn = precision_score(y_test, y_pred_knn, pos_label='rain')
+        recall_knn = recall_score(y_test, y_pred_knn, pos_label='rain')
 
+        # Add scikit learn kNN metrics to the comparison data
+        comparison_data["Model"].append(f"Scikit-learn kNN (k={k})")
+        comparison_data["Accuracy"].append(accuracy_knn)
+        comparison_data["Precision"].append(precision_knn)
+        comparison_data["Recall"].append(recall_knn)
 
+        y_pred_custom_knn = knn_from_scratch(x_train, y_train, x_test, k)
+        accuracy_custom_knn = accuracy_score(y_test, y_pred_custom_knn)
+        precision_custom_knn = precision_score(y_test, y_pred_custom_knn, pos_label='rain')
+        recall_custom_knn = recall_score(y_test, y_pred_custom_knn, pos_label='rain')
 
+        # Add custom kNN metrics to the comparison data
+        comparison_data["Model"].append(f"Custom kNN (k={k})")
+        comparison_data["Accuracy"].append(accuracy_custom_knn)
+        comparison_data["Precision"].append(precision_custom_knn)
+        comparison_data["Recall"].append(recall_custom_knn)
+
+    # Convert to DataFrame for better formatting
+    df_comparison = pd.DataFrame(comparison_data)
+    return df_comparison
 
 
 def main():
@@ -155,58 +191,11 @@ def main():
     if not checkScalability(data):
         x_train, x_test = scale_data(x_train, x_test)
 
-
-    # Prepare data for the comparison table
-    comparison_data = {
-        "Model": [], 
-        "Accuracy": [], 
-        "Precision": [], 
-        "Recall": []
-    }
-
-    # KNN from Scratch Evaluation for Different k Values
-    k_values = [1, 3, 5, 7, 9]
-    for k in k_values:
-
-
-        # KNN Using scikit-learn 
-        knn_model = KNeighborsClassifier(n_neighbors=k)
-        knn_model.fit(x_train, y_train)
-        y_pred_knn = knn_model.predict(x_test)
-
-        # Evaluate scikit-learn kNN
-        accuracy_knn = accuracy_score(y_test, y_pred_knn)
-        precision_knn = precision_score(y_test, y_pred_knn, pos_label='rain')
-        recall_knn = recall_score(y_test, y_pred_knn, pos_label='rain')
-
-        # Add scikit learn kNN metrics to the comparison data
-        comparison_data["Model"].append(f"Scikit-learn kNN (k={k})")
-        comparison_data["Accuracy"].append(accuracy_knn)
-        comparison_data["Precision"].append(precision_knn)
-        comparison_data["Recall"].append(recall_knn)
-
-
-        y_pred_custom_knn = knn_from_scratch(x_train, y_train, x_test, k)
-        accuracy_custom_knn = accuracy_score(y_test, y_pred_custom_knn)
-        precision_custom_knn = precision_score(y_test, y_pred_custom_knn, pos_label='rain')
-        recall_custom_knn = recall_score(y_test, y_pred_custom_knn, pos_label='rain')
-        
-        # Add custom kNN metrics to the comparison data
-        comparison_data["Model"].append(f"Custom kNN (k={k})")
-        comparison_data["Accuracy"].append(accuracy_custom_knn)
-        comparison_data["Precision"].append(precision_custom_knn)
-        comparison_data["Recall"].append(recall_custom_knn)
-
-    # Convert to DataFrame for better formatting
-    df_comparison = pd.DataFrame(comparison_data)
-
-    # Display the comparison table
+    # Apply knn algorithm and Display the comparison table
+    df_comparison = knn_comparison(x_train, y_train, x_test, y_test)
     print("\nKNN Performance Comparison (scikit-learn vs Custom kNN):")
     print(df_comparison)
 
-
-
 if __name__ == "__main__":
     main()
-
 
