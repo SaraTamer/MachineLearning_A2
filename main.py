@@ -137,7 +137,7 @@ def knn_comparison(x_train, y_train, x_test, y_test):
     }
 
     # KNN from Scratch Evaluation for Different k Values
-    k_values = [1, 3, 5, 7, 9]
+    k_values = [3, 5, 7, 9, 11]
     for k in k_values:
         # KNN Using scikit-learn
         knn_model = KNeighborsClassifier(n_neighbors=k)
