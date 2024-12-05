@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler, OrdinalEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+
 
 
 def load_dataset(filename):
@@ -13,17 +17,15 @@ def load_dataset(filename):
 
 # Task1: preprocessing
 def missingData(data):
-    # calculate number of missing
     missing_data = data.isnull().sum()
-    # choose only columns include missing data
     missing_data = missing_data[missing_data > 0]
     return missing_data.sum()
 
 
 def drop_missing(data):
     DataDropped = data.dropna()
-    print("Data after dropping the missing :- ")
-    print(DataDropped)
+    # print("Data after dropping the missing :- ")
+    # print(DataDropped)
     return DataDropped
 
 
@@ -32,37 +34,24 @@ def replace_missing(data):
     # fill the missing with mean of each feature
     FilledData = DataMiss.fillna(DataMiss.mean())
     FilledData["Rain"] = data["Rain"]
-    print("Data after filling the missing :- ")
-    print(FilledData)
+    # print("Data after filling the missing :- ")
+    # print(FilledData)
     return FilledData
-
-
-# def encode_target(data):
-#     enc = OrdinalEncoder(categories=[['rain', 'no rain']])
-#     target_encoded = enc.fit_transform(data['Rain'].values.reshape(-1, 1))
-#     return target_encoded
 
 
 def scale_data(x_train, x_test):
     numeric_data_x_train = x_train.select_dtypes(include=['number'])
     numeric_data_x_test = x_test.select_dtypes(include=['number'])
 
-    # numeric_data_y_train = y_train.reshape(-1, 1)
-    # numeric_data_y_test = y_test.reshape(-1, 1)
-
     scaler = StandardScaler()
 
     x_train_scaled = scaler.fit_transform(numeric_data_x_train)
     x_test_scaled = scaler.transform(numeric_data_x_test)
 
-    # y_train_scaled = scaler.fit_transform(numeric_data_y_train)
-    # y_test_scaled = scaler.transform(numeric_data_y_test)
-
     return (
         x_train_scaled,
         x_test_scaled,
-        # y_train_scaled,
-        # y_test_scaled
+
     )
 
 
@@ -127,6 +116,7 @@ def knn_from_scratch(X_train, y_train, X_test, k):
 
     return y_predicted
 
+
 def knn_comparison(x_train, y_train, x_test, y_test):
     # Prepare data for the comparison table
     comparison_data = {
@@ -171,9 +161,126 @@ def knn_comparison(x_train, y_train, x_test, y_test):
     return df_comparison
 
 
+def decision_tree(x_train, y_train, x_test, y_test):
+    performance_comparison(x_train, y_train, x_test, y_test, "decision tree")
+
+
+def knn(x_train, y_train, x_test, y_test):
+    performance_comparison(x_train, y_train, x_test, y_test, "KNN")
+
+
+def naive_bayes(x_train, y_train, x_test, y_test):
+    performance_comparison(x_train, y_train, x_test, y_test, "Naïve Bayes")
+
+
+def algorithms(x_train, y_train, x_test, y_test):
+    decision_tree(x_train, y_train, x_test, y_test)
+    knn(x_train, y_train, x_test, y_test)
+    naive_bayes(x_train, y_train, x_test, y_test)
+
+
+def performance_comparison(x_train, y_train, x_test, y_test, algorithm):
+    metrics_comparison = {
+        "Model": [],
+        "Accuracy": [],
+        "Precision": [],
+        "Recall": []
+    }
+    if algorithm == "decision tree":
+        model = DecisionTreeClassifier(random_state=42)
+    elif algorithm == "KNN":
+        model = KNeighborsClassifier(n_neighbors=3)
+    else:
+        model = GaussianNB()
+
+    model.fit(x_train, y_train)
+    prediction_values = model.predict(x_test)
+    # evaluation
+    accuracy = accuracy_score(y_test, prediction_values)
+    precision = precision_score(y_test, prediction_values, pos_label='rain')
+    recall = recall_score(y_test, prediction_values, pos_label='rain')
+    # add performance to metrics
+    metrics_comparison["Model"].append(algorithm)
+    metrics_comparison["Accuracy"].append(accuracy)
+    metrics_comparison["Precision"].append(precision)
+    metrics_comparison["Recall"].append(recall)
+    # print report
+    comparison_table = pd.DataFrame(metrics_comparison)
+    print("\n----------------------------------------")
+    print("Performance Comparison Table:")
+    print(comparison_table)
+
+
+def report_handling_data(data):
+    data_after_drop = drop_missing(data)
+    x_train_d, x_test_d, y_train_d, y_test_d = split_data(data_after_drop)
+    print("-----------------------------")
+    print("data after dropping technique")
+    algorithms(x_train_d, y_train_d, x_test_d, y_test_d)
+
+    # ---------------------------------------------------------------
+
+    data_after_replace = replace_missing(data)
+    x_train_r, x_test_r, y_train_r, y_test_r = split_data(data_after_replace)
+    print("-----------------------------")
+    print("data after replacing technique")
+    algorithms(x_train_r, y_train_r, x_test_r, y_test_r)
+
+
+def decision_tree_plot(x_train, y_train, columns):
+    # convert x_train back to a DataFrame to retain column names
+    x_train = pd.DataFrame(x_train, columns=columns)
+
+    # plot of the decision tree
+    model = DecisionTreeClassifier(random_state=42)
+    model.fit(x_train, y_train)
+
+    plt.figure(figsize=(12,12))
+    plot_tree(
+        model,
+        feature_names=x_train.columns,
+        class_names=model.classes_,
+        filled=True,
+        rounded=True
+    )
+    plt.title("Decision Tree Structure")
+    plt.savefig("decision_tree_plot.png")
+    plt.show()
+
+    # detailed report how to get prediction
+    print("\nFeatures Importance:")
+    features_importance = model.feature_importances_
+    importance_data = pd.DataFrame({
+        'Feature': columns,
+        'Importance': features_importance
+    })
+    importance_data = importance_data.sort_values(by='Importance', ascending=False)
+
+    for feature, importance in importance_data['Importance'].items():
+        print(f"Feature '{feature}' has importance: {importance}")
+# -----------------------------------------------------------------------
+
+    # Splitting Logic
+    print("\nSplitting Logic:")
+    tree_ = model.tree_
+    for i in range(tree_.node_count):
+        if tree_.feature[i] != -2:
+            feature = columns[tree_.feature[i]]
+            decision_boundry = tree_.threshold[i]
+            print(f"")
+            print(f"""
+            Node {i}: Splits on '{feature}' <= {decision_boundry}
+            Left child (Node {tree_.children_left[i]}): '{feature} <= {decision_boundry:.2f}'\n"
+            Right child (Node {tree_.children_right[i]}): '{feature} > {decision_boundry:.2f}'\n"
+            -------------------------------------------------------------------------------------
+            )""")
+
+
 def main():
     # a) Load the dataset
     data = load_dataset("weather_forecast_data.csv")
+    data_before_preprocess = data # for affect handling
+
     print(f'# of missing data : {missingData(data)}')
     print("""
     choose technique to handle data:
@@ -187,7 +294,7 @@ def main():
         data = replace_missing(data)
 
     x_train, x_test, y_train, y_test = split_data(data)
-
+    columns = x_train.columns
     if not checkScalability(data):
         x_train, x_test = scale_data(x_train, x_test)
 
@@ -195,7 +302,10 @@ def main():
     df_comparison = knn_comparison(x_train, y_train, x_test, y_test)
     print("\nKNN Performance Comparison (scikit-learn vs Custom kNN):")
     print(df_comparison)
+    algorithms(x_train, y_train, x_test, y_test)
+    report_handling_data(data_before_preprocess)
+    decision_tree_plot(x_train, y_train,columns)
+
 
 if __name__ == "__main__":
     main()
-
