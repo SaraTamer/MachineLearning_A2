@@ -23,9 +23,14 @@ def missingData(data):
 
 
 def drop_missing(data):
+
+    rows_before = data.shape[0]
     DataDropped = data.dropna()
-    # print("Data after dropping the missing :- ")
-    # print(DataDropped)
+    rows_after = DataDropped.shape[0]
+
+    print(f"rows before dropping: {rows_before}")
+    print(f"rows after dropping: {rows_after}")
+
     return DataDropped
 
 
@@ -288,7 +293,7 @@ def main():
      2- Replacing with the average of the feature
     """)
     choice = input("Enter number of your choice: ")
-    if choice == 1:
+    if choice == '1':
         data = drop_missing(data)
     else:
         data = replace_missing(data)
